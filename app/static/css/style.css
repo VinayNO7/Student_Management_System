@@ -1,0 +1,97 @@
+/* Student Management System Custom Styling */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Transitions */
+.tab-pane {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.modal {
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.modal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Badges */
+.badge-active {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+.badge-graduated {
+    background-color: #e0e7ff;
+    color: #4338ca;
+}
+.badge-suspended {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+.badge-inactive {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.badge-present {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+.badge-absent {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+.badge-late {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+.badge-excused {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+/* Toast Notification Animation */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.toast-item {
+    animation: slideIn 0.3s ease-out;
+}
+

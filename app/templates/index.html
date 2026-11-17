@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack — Student Management System (DBMS)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="App.switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md">
+                        <i class="fas fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-tight text-slate-900">EduTrack<span class="text-indigo-600">SMS</span></span>
+                        <span class="hidden md:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">DBMS v1.0</span>
+                    </div>
+                </div>
+
+                <!-- Search & Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Search Input -->
+                    <div class="relative hidden sm:block w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fas fa-search text-sm"></i>
+                        </span>
+                        <input id="global-search" type="text" placeholder="Quick search students..." 
+                               class="w-full pl-9 pr-4 py-1.5 bg-slate-100 focus:bg-white border border-transparent focus:border-indigo-500 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition">
+                    </div>
+
+                    <!-- Quick Add Action -->
+                    <button onclick="App.openAddStudentModal()" class="inline-flex items-center px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
+                        <i class="fas fa-user-plus mr-1.5 text-xs"></i>
+                        <span class="hidden md:inline">Add Student</span>
+                    </button>
+
+                    <!-- Swagger Docs Link -->
+                    <a href="/docs" target="_blank" title="Open API Documentation" class="text-slate-500 hover:text-indigo-600 p-2 rounded-lg hover:bg-slate-100 transition">
+                        <i class="fas fa-book-open"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container Layout -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 flex-shrink-0">
+            <nav class="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-sm space-y-1">
+                <a href="#dashboard" data-tab-target="dashboard" class="flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl bg-indigo-700 text-white transition">
+                    <i class="fas fa-chart-pie w-5 mr-3 text-center"></i>
+                    Dashboard
+                </a>
+                <a href="#students" data-tab-target="students" class="flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fas fa-user-graduate w-5 mr-3 text-center text-indigo-500"></i>
+                    Students
+                </a>
+                <a href="#courses" data-tab-target="courses" class="flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fas fa-book w-5 mr-3 text-center text-amber-500"></i>
+                    Courses
+                </a>
+                <a href="#departments" data-tab-target="departments" class="flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fas fa-building-columns w-5 mr-3 text-center text-blue-500"></i>
+                    Departments
+                </a>
+                <a href="#enrollments" data-tab-target="enrollments" class="flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fas fa-award w-5 mr-3 text-center text-emerald-500"></i>
+                    Enrollments & Grades
+                </a>
+                <a href="#attendance" data-tab-target="attendance" class="flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fas fa-calendar-check w-5 mr-3 text-center text-rose-500"></i>
+                    Attendance
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 min-w-0">
+            
+            <!-- 1. DASHBOARD SECTION -->
+            <section id="section-dashboard" class="tab-section space-y-6">
+                <!-- Welcome Banner -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Academic Overview</h1>
+                        <p class="text-sm text-slate-500 mt-1">Real-time statistics and departmental metrics.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="App.openAddStudentModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                            <i class="fas fa-user-plus mr-1.5"></i>Add Student
+                        </button>
+                        <button onclick="App.exportStudentsCSV()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold shadow-sm transition">
+                            <i class="fas fa-file-export mr-1.5 text-slate-500"></i>Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Total Students -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Students</div>
+                            <div id="stat-total-students" class="text-2xl font-extrabold text-slate-900 mt-1">--</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <!-- Active Students -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Students</div>
+                            <div id="stat-active-students" class="text-2xl font-extrabold text-emerald-600 mt-1">--</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                    <!-- Total Courses -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Courses</div>
+                            <div id="stat-total-courses" class="text-2xl font-extrabold text-slate-900 mt-1">--</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                            <i class="fas fa-book-bookmark"></i>
+                        </div>
+                    </div>
+                    <!-- Departments -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Departments</div>
+                            <div id="stat-total-departments" class="text-2xl font-extrabold text-slate-900 mt-1">--</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                    </div>
+                    <!-- Avg GPA -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Avg GPA</div>
+                            <div id="stat-avg-gpa" class="text-2xl font-extrabold text-violet-600 mt-1">--</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-lg">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Recent Activity Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Department Distribution Chart -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+                        <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center">
+                            <i class="fas fa-chart-pie mr-2 text-indigo-500"></i>Student Distribution by Dept
+                        </h2>
+                        <div class="relative h-64 flex items-center justify-center">
+                            <canvas id="deptDistributionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Students -->
+                    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-base font-bold text-slate-900 flex items-center">
+                                <i class="fas fa-clock-rotate-left mr-2 text-indigo-500"></i>Recently Added Students
+                            </h2>
+                            <button onclick="App.switchTab('students')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                                View All &rarr;
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-xs text-slate-400 uppercase font-semibold">
+                                        <th class="py-2.5 px-4">Roll No</th>
+                                        <th class="py-2.5 px-4">Student</th>
+                                        <th class="py-2.5 px-4">Department</th>
+                                        <th class="py-2.5 px-4">Status</th>
+                                        <th class="py-2.5 px-4 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-students-tbody">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. STUDENTS SECTION -->
+            <section id="section-students" class="tab-section hidden space-y-6">
+                <!-- Header with Action -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            <h1 class="text-2xl font-bold text-slate-900">Student Directory</h1>
+                            <span id="students-count-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">0 Students</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Manage student profiles, enrollments, and academic standings.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="App.exportStudentsCSV()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold shadow-sm transition">
+                            <i class="fas fa-download mr-1.5 text-slate-400"></i>Export CSV
+                        </button>
+                        <button onclick="App.openAddStudentModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                            <i class="fas fa-plus mr-1.5"></i>Add Student
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter & Search Toolbar -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Search</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
+                            <input id="student-search-input" type="text" placeholder="Name, Roll, Email..." 
+                                   class="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label>
+                        <select id="student-filter-dept" class="w-full py-1.5 px-3 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 bg-white">
+                            <option value="">All Departments</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Status</label>
+                        <select id="student-filter-status" class="w-full py-1.5 px-3 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 bg-white">
+                            <option value="">All Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Graduated">Graduated</option>
+                            <option value="Suspended">Suspended</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Semester</label>
+                        <select id="student-filter-semester" class="w-full py-1.5 px-3 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 bg-white">
+                            <option value="">All Semesters</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Students Table Card -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr class="text-xs text-slate-500 uppercase font-semibold">
+                                    <th class="py-3 px-4">Roll Number</th>
+                                    <th class="py-3 px-4">Student & Contact</th>
+                                    <th class="py-3 px-4">Department</th>
+                                    <th class="py-3 px-4">Year / Sem</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4">GPA</th>
+                                    <th class="py-3 px-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. COURSES SECTION -->
+            <section id="section-courses" class="tab-section hidden space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Course Offerings</h1>
+                        <p class="text-sm text-slate-500 mt-1">Curriculum catalogs, credit allocations, and faculty instructors.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <select id="course-filter-dept" class="py-2 px-3 text-sm rounded-xl border border-slate-200 bg-white">
+                            <option value="">All Departments</option>
+                        </select>
+                        <button onclick="App.openAddCourseModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                            <i class="fas fa-plus mr-1.5"></i>Add Course
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr class="text-xs text-slate-500 uppercase font-semibold">
+                                    <th class="py-3 px-4">Course Code</th>
+                                    <th class="py-3 px-4">Course Name & Details</th>
+                                    <th class="py-3 px-4">Credits</th>
+                                    <th class="py-3 px-4">Department</th>
+                                    <th class="py-3 px-4">Instructor</th>
+                                    <th class="py-3 px-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courses-table-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. DEPARTMENTS SECTION -->
+            <section id="section-departments" class="tab-section hidden space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Academic Departments</h1>
+                        <p class="text-sm text-slate-500 mt-1">Faculties, department chairs, and department metrics.</p>
+                    </div>
+                    <button onclick="App.openAddDeptModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                        <i class="fas fa-plus mr-1.5"></i>Add Department
+                    </button>
+                </div>
+
+                <div id="departments-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Populated via JS -->
+                </div>
+            </section>
+
+            <!-- 5. ENROLLMENTS & GRADES SECTION -->
+            <section id="section-enrollments" class="tab-section hidden space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Enrollments & Academic Grades</h1>
+                        <p class="text-sm text-slate-500 mt-1">Enroll students into courses, assign grades, and compute cumulative GPAs.</p>
+                    </div>
+                    <button onclick="App.openEnrollStudentModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                        <i class="fas fa-user-plus mr-1.5"></i>Enroll Student
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr class="text-xs text-slate-500 uppercase font-semibold">
+                                    <th class="py-3 px-4">Student</th>
+                                    <th class="py-3 px-4">Course</th>
+                                    <th class="py-3 px-4">Semester</th>
+                                    <th class="py-3 px-4">Grade & Points</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4">Date</th>
+                                    <th class="py-3 px-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="enrollments-table-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. ATTENDANCE SECTION -->
+            <section id="section-attendance" class="tab-section hidden space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Attendance Records</h1>
+                        <p class="text-sm text-slate-500 mt-1">Track presence, absences, tardiness, and lecture participation.</p>
+                    </div>
+                    <button onclick="App.openMarkAttendanceModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                        <i class="fas fa-clipboard-check mr-1.5"></i>Mark Attendance
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filter Course</label>
+                        <select id="attendance-filter-course" class="w-full py-1.5 px-3 text-sm rounded-lg border border-slate-200 bg-white">
+                            <option value="">All Courses</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filter Date</label>
+                        <input id="attendance-filter-date" type="date" class="w-full py-1.5 px-3 text-sm rounded-lg border border-slate-200">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr class="text-xs text-slate-500 uppercase font-semibold">
+                                    <th class="py-3 px-4">Date</th>
+                                    <th class="py-3 px-4">Student</th>
+                                    <th class="py-3 px-4">Course</th>
+                                    <th class="py-3 px-4">Attendance Status</th>
+                                    <th class="py-3 px-4">Remarks</th>
+                                    <th class="py-3 px-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendance-table-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Student Add / Edit Modal -->
+    <div id="student-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="student-modal-title" class="text-xl font-bold text-slate-900">Register Student</h3>
+                <button data-modal-close class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="student-form" class="p-6 overflow-y-auto space-y-4">
+                <input type="hidden" id="student-form-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Roll Number *</label>
+                        <input type="text" id="student-form-roll" required placeholder="e.g. STU-2024-001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">First Name *</label>
+                        <input type="text" id="student-form-first-name" required placeholder="First name" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Last Name *</label>
+                        <input type="text" id="student-form-last-name" required placeholder="Last name" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email *</label>
+                        <input type="email" id="student-form-email" required placeholder="student@example.edu" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phone Number</label>
+                        <input type="text" id="student-form-phone" placeholder="+1 234 567 890" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Date of Birth</label>
+                        <input type="date" id="student-form-dob" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Gender</label>
+                        <select id="student-form-gender" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Department *</label>
+                        <select id="student-form-dept" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Year of Study *</label>
+                        <select id="student-form-year" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Semester *</label>
+                        <select id="student-form-semester" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Status *</label>
+                        <select id="student-form-status" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="Active">Active</option>
+                            <option value="Graduated">Graduated</option>
+                            <option value="Suspended">Suspended</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Enrollment Date *</label>
+                        <input type="date" id="student-form-enrollment-date" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Address</label>
+                        <input type="text" id="student-form-address" placeholder="Residential Address" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Student Full Profile Detail Modal -->
+    <div id="student-detail-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Header Profile Card -->
+            <div class="bg-gradient-to-r from-indigo-700 to-violet-800 p-6 text-white relative">
+                <button data-modal-close class="absolute top-4 right-4 text-white/80 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur border border-white/30 flex items-center justify-center text-3xl font-bold">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div>
+                        <h2 id="detail-full-name" class="text-2xl font-bold">--</h2>
+                        <div class="flex items-center space-x-2 mt-1 text-sm text-indigo-100">
+                            <span id="detail-roll" class="font-mono bg-white/20 px-2 py-0.5 rounded text-xs font-bold">--</span>
+                            <span>•</span>
+                            <span id="detail-dept">--</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-4 pt-4 border-t border-white/20 text-xs">
+                    <div>Status: <span id="detail-status">--</span></div>
+                    <div>GPA: <span id="detail-gpa" class="font-bold text-white text-sm bg-white/20 px-2 py-0.5 rounded">--</span></div>
+                    <div>Attendance: <span id="detail-attendance-rate" class="font-bold text-emerald-300 text-sm">--</span></div>
+                </div>
+            </div>
+
+            <!-- Profile Details Body -->
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Contact & Bio Grid -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">General Information</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <div class="text-xs text-slate-500">Email</div>
+                            <div id="detail-email" class="font-medium text-slate-900 truncate">--</div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <div class="text-xs text-slate-500">Phone</div>
+                            <div id="detail-phone" class="font-medium text-slate-900">--</div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <div class="text-xs text-slate-500">Gender</div>
+                            <div id="detail-gender" class="font-medium text-slate-900">--</div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <div class="text-xs text-slate-500">Date of Birth</div>
+                            <div id="detail-dob" class="font-medium text-slate-900">--</div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <div class="text-xs text-slate-500">Academic Standing</div>
+                            <div id="detail-year-sem" class="font-medium text-slate-900">--</div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <div class="text-xs text-slate-500">Enrollment Date</div>
+                            <div id="detail-enrolled-date" class="font-medium text-slate-900">--</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-slate-50 rounded-xl text-sm">
+                        <div class="text-xs text-slate-500">Address</div>
+                        <div id="detail-address" class="font-medium text-slate-900">--</div>
+                    </div>
+                </div>
+
+                <!-- Enrolled Courses -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Enrolled Courses & Academic Transcript</h3>
+                    <div id="detail-courses-list" class="space-y-2">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Attendance History -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Recent Attendance Records</h3>
+                    <div id="detail-attendance-list" class="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button data-modal-close class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-sm font-semibold transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Course Modal -->
+    <div id="course-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="course-modal-title" class="text-xl font-bold text-slate-900">Add Course</h3>
+                <button data-modal-close class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="course-form" class="p-6 space-y-4">
+                <input type="hidden" id="course-form-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Course Code *</label>
+                        <input type="text" id="course-form-code" required placeholder="e.g. CS101" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Credits *</label>
+                        <input type="number" id="course-form-credits" required min="1" max="10" value="3" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Course Name *</label>
+                    <input type="text" id="course-form-name" required placeholder="e.g. Database Systems" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Department *</label>
+                    <select id="course-form-dept" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Instructor</label>
+                    <input type="text" id="course-form-instructor" placeholder="Faculty name" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Description</label>
+                    <textarea id="course-form-desc" rows="2" placeholder="Course syllabus summary..." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600"></textarea>
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Save Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Department Modal -->
+    <div id="dept-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="dept-modal-title" class="text-xl font-bold text-slate-900">Add Department</h3>
+                <button data-modal-close class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="dept-form" class="p-6 space-y-4">
+                <input type="hidden" id="dept-form-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Department Code *</label>
+                        <input type="text" id="dept-form-code" required placeholder="e.g. CSE" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Head of Department</label>
+                        <input type="text" id="dept-form-hod" placeholder="Dr. Alan Turing" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Department Name *</label>
+                    <input type="text" id="dept-form-name" required placeholder="e.g. Computer Science & Engineering" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Description</label>
+                    <textarea id="dept-form-desc" rows="2" placeholder="Department overview..." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600"></textarea>
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Save Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Enroll Student Modal -->
+    <div id="enrollment-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-900">Enroll Student in Course</h3>
+                <button data-modal-close class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="enrollment-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Select Student (Active Students) *</label>
+                    <select id="enrollment-form-student" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Select Course (Department Matched) *</label>
+                        <span id="enrollment-form-dept-badge" class="text-xs font-semibold text-indigo-600"></span>
+                    </div>
+                    <select id="enrollment-form-course" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <!-- Populated via JS -->
+                    </select>
+                    <p id="enrollment-form-hint" class="text-xs text-slate-500 mt-1 hidden"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Semester Name *</label>
+                        <input type="text" id="enrollment-form-semester" required placeholder="e.g. Fall 2024" value="Fall 2024" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Enrollment Date *</label>
+                        <input type="date" id="enrollment-form-date" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Status</label>
+                        <select id="enrollment-form-status" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="Enrolled">Enrolled</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Dropped">Dropped</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Initial Grade (Optional)</label>
+                        <select id="enrollment-form-grade" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="">None / Pending</option>
+                            <option value="A+">A+ (4.0)</option>
+                            <option value="A">A (4.0)</option>
+                            <option value="A-">A- (3.7)</option>
+                            <option value="B+">B+ (3.3)</option>
+                            <option value="B">B (3.0)</option>
+                            <option value="B-">B- (2.7)</option>
+                            <option value="C+">C+ (2.3)</option>
+                            <option value="C">C (2.0)</option>
+                            <option value="D">D (1.0)</option>
+                            <option value="F">F (0.0)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Confirm Enrollment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. Grade Update Modal -->
+    <div id="grade-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-900">Assign Grade</h3>
+                <button data-modal-close class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="grade-form" class="p-6 space-y-4">
+                <input type="hidden" id="grade-form-id">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Letter Grade</label>
+                    <select id="grade-form-grade" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <option value="">Pending / None</option>
+                        <option value="A+">A+ (4.00)</option>
+                        <option value="A">A (4.00)</option>
+                        <option value="A-">A- (3.70)</option>
+                        <option value="B+">B+ (3.30)</option>
+                        <option value="B">B (3.00)</option>
+                        <option value="B-">B- (2.70)</option>
+                        <option value="C+">C+ (2.30)</option>
+                        <option value="C">C (2.00)</option>
+                        <option value="C-">C- (1.70)</option>
+                        <option value="D+">D+ (1.30)</option>
+                        <option value="D">D (1.00)</option>
+                        <option value="F">F (0.00)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Status</label>
+                    <select id="grade-form-status" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <option value="Enrolled">Enrolled</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Dropped">Dropped</option>
+                    </select>
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Save Grade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7. Attendance Modal -->
+    <div id="attendance-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-900">Mark Attendance</h3>
+                <button data-modal-close class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="attendance-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Select Course *</label>
+                    <select id="attendance-form-course" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Select Enrolled Student *</label>
+                        <span id="attendance-form-enrolled-count" class="text-xs font-semibold text-indigo-600"></span>
+                    </div>
+                    <select id="attendance-form-student" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                        <option value="">-- Please select a course first --</option>
+                    </select>
+                    <p id="attendance-form-warning" class="text-xs text-amber-600 font-medium mt-1 hidden"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Date *</label>
+                        <input type="date" id="attendance-form-date" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Status *</label>
+                        <select id="attendance-form-status" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600 bg-white">
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                            <option value="Late">Late</option>
+                            <option value="Excused">Excused</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Remarks</label>
+                    <input type="text" id="attendance-form-remarks" placeholder="Optional notes (e.g. sick leave, quiz day)" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-600">
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 8. Reusable Confirmation Modal -->
+    <div id="confirm-modal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4">
+            <div class="flex items-center space-x-3 text-rose-600">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                <h3 id="confirm-modal-title" class="text-lg font-bold text-slate-900">Confirm Deletion</h3>
+            </div>
+            <p id="confirm-modal-body" class="text-sm text-slate-600">Are you sure you want to proceed?</p>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" data-modal-close class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+                <button id="confirm-modal-btn" type="button" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none *:pointer-events-auto"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
