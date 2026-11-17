@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import date
+from datetime import date as date_type
 
 from app.database import get_db
 from app import schemas, crud
@@ -12,29 +12,22 @@ router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
 def list_attendance(
     student_id: Optional[int] = None,
     course_id: Optional[int] = None,
-    date: Optional[date] = None,
-    date_val: Optional[date] = None,
+    date: Optional[date_type] = None,
+    date_val: Optional[date_type] = None,
     status: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Retrieve attendance logs."""
-    chosen_date = None
-    if date is not None and not hasattr(date, "default"):
-        chosen_date = date
-    elif date_val is not None and not hasattr(date_val, "default"):
-        chosen_date = date_val
-
-    chosen_status = status if (status is not None and not hasattr(status, "default")) else None
-
+    chosen_date = date if date is not None else date_val
     return crud.get_attendance_records(
         db,
         student_id=student_id,
         course_id=course_id,
         date_val=chosen_date,
-        status=chosen_status
+        status=status
     )
 
-@router.post("", response_model=schemas.AttendanceOut, status_code=status.HTTP_200_OK)
+@router.post("", response_model=schemas.AttendanceOut, status_code=http_status.HTTP_200_OK)
 def mark_attendance(attendance_in: schemas.AttendanceCreate, db: Session = Depends(get_db)):
     """Mark or update student attendance for a course on a date."""
     student = crud.get_student_by_id(db, attendance_in.student_id)
@@ -60,7 +53,7 @@ def mark_attendance(attendance_in: schemas.AttendanceCreate, db: Session = Depen
         )
 
     # 3. Validate date is not in future
-    if attendance_in.date > date.today():
+    if attendance_in.date > date_type.today():
         raise HTTPException(
             status_code=400,
             detail="Cannot mark attendance for a future date."
@@ -81,14 +74,14 @@ def mark_attendance(attendance_in: schemas.AttendanceCreate, db: Session = Depen
         created_at=rec.created_at
     )
 
-@router.post("/batch", response_model=schemas.AttendanceBatchResponse, status_code=status.HTTP_200_OK)
+@router.post("/batch", response_model=schemas.AttendanceBatchResponse, status_code=http_status.HTTP_200_OK)
 def batch_mark_attendance(batch_in: schemas.AttendanceBatchCreate, db: Session = Depends(get_db)):
     """Mark attendance for a full roster/class in one call."""
     course = crud.get_course_by_id(db, batch_in.course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course does not exist.")
     
-    if batch_in.date > date.today():
+    if batch_in.date > date_type.today():
         raise HTTPException(
             status_code=400,
             detail="Cannot mark attendance for a future date."
