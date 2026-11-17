@@ -897,11 +897,13 @@ const App = {
     async loadAttendance() {
         const courseId = document.getElementById('attendance-filter-course')?.value;
         const dateVal = document.getElementById('attendance-filter-date')?.value;
+        const statusVal = document.getElementById('attendance-filter-status')?.value;
 
         try {
             const records = await API.getAttendance({
                 course_id: courseId || null,
-                date: dateVal || null
+                date: dateVal || null,
+                status: statusVal || null
             });
             this.renderAttendanceTable(records);
         } catch (error) {
@@ -909,12 +911,26 @@ const App = {
         }
     },
 
+    clearAttendanceFilters() {
+        const courseEl = document.getElementById('attendance-filter-course');
+        const dateEl = document.getElementById('attendance-filter-date');
+        const statusEl = document.getElementById('attendance-filter-status');
+        if (courseEl) courseEl.value = '';
+        if (dateEl) dateEl.value = '';
+        if (statusEl) statusEl.value = '';
+        this.loadAttendance();
+    },
+
     renderAttendanceTable(records) {
         const tbody = document.getElementById('attendance-table-tbody');
         if (!tbody) return;
 
         if (records.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500">No attendance logs found.</td></tr>`;
+            const dateVal = document.getElementById('attendance-filter-date')?.value;
+            const msg = dateVal 
+                ? `No attendance logs recorded for ${dateVal}.` 
+                : `No attendance logs found.`;
+            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500">${msg}</td></tr>`;
             return;
         }
 
@@ -1204,6 +1220,8 @@ const App = {
         document.getElementById('course-filter-dept')?.addEventListener('change', () => this.loadCourses());
         document.getElementById('attendance-filter-course')?.addEventListener('change', () => this.loadAttendance());
         document.getElementById('attendance-filter-date')?.addEventListener('change', () => this.loadAttendance());
+        document.getElementById('attendance-filter-date')?.addEventListener('input', () => this.loadAttendance());
+        document.getElementById('attendance-filter-status')?.addEventListener('change', () => this.loadAttendance());
 
         // Dynamic cascading dropdowns for Enrollment and Attendance
         document.getElementById('enrollment-form-student')?.addEventListener('change', (e) => this.onEnrollStudentChange(e.target.value));

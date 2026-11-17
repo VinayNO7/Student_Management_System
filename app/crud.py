@@ -3,6 +3,7 @@ from sqlalchemy import or_, func, desc
 from app import models, schemas
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
+from datetime import date
 
 # Grade Point Mapping standard
 GRADE_POINTS = {
@@ -445,7 +446,8 @@ def get_attendance_records(
     db: Session,
     student_id: Optional[int] = None,
     course_id: Optional[int] = None,
-    date_val: Optional[Any] = None
+    date_val: Optional[Any] = None,
+    status: Optional[str] = None
 ) -> List[schemas.AttendanceOut]:
     query = db.query(models.Attendance)
     if student_id:
@@ -453,7 +455,14 @@ def get_attendance_records(
     if course_id:
         query = query.filter(models.Attendance.course_id == course_id)
     if date_val:
+        if isinstance(date_val, str):
+            try:
+                date_val = date.fromisoformat(date_val)
+            except ValueError:
+                pass
         query = query.filter(models.Attendance.date == date_val)
+    if status:
+        query = query.filter(models.Attendance.status == status)
 
     records = query.order_by(models.Attendance.date.desc(), models.Attendance.id.desc()).all()
     result = []

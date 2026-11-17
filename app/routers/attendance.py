@@ -12,11 +12,27 @@ router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
 def list_attendance(
     student_id: Optional[int] = None,
     course_id: Optional[int] = None,
+    date: Optional[date] = None,
     date_val: Optional[date] = None,
+    status: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Retrieve attendance logs."""
-    return crud.get_attendance_records(db, student_id=student_id, course_id=course_id, date_val=date_val)
+    chosen_date = None
+    if date is not None and not hasattr(date, "default"):
+        chosen_date = date
+    elif date_val is not None and not hasattr(date_val, "default"):
+        chosen_date = date_val
+
+    chosen_status = status if (status is not None and not hasattr(status, "default")) else None
+
+    return crud.get_attendance_records(
+        db,
+        student_id=student_id,
+        course_id=course_id,
+        date_val=chosen_date,
+        status=chosen_status
+    )
 
 @router.post("", response_model=schemas.AttendanceOut, status_code=status.HTTP_200_OK)
 def mark_attendance(attendance_in: schemas.AttendanceCreate, db: Session = Depends(get_db)):

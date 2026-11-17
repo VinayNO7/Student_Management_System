@@ -226,9 +226,27 @@ def test_attendance_operations(db):
     att_id = record.id
     assert record.status == "Present"
 
-    # 2. List attendance
+    # 2. List attendance & verify date filter
     logs = attendance.list_attendance(student_id=student.id, db=db)
     assert any(a.id == att_id for a in logs)
+
+    # Date filter verification: must ONLY return records for that date
+    date_logs = attendance.list_attendance(date=date(2025, 2, 1), db=db)
+    assert len(date_logs) > 0
+    assert all(a.date == date(2025, 2, 1) for a in date_logs)
+    assert any(a.id == att_id for a in date_logs)
+
+    # Date filter with date_val alias
+    date_val_logs = attendance.list_attendance(date_val=date(2025, 2, 1), db=db)
+    assert len(date_val_logs) == len(date_logs)
+
+    # Non-matching date filter returns empty
+    empty_logs = attendance.list_attendance(date=date(2020, 1, 1), db=db)
+    assert len(empty_logs) == 0
+
+    # Status filter
+    present_logs = attendance.list_attendance(date=date(2025, 2, 1), status="Present", db=db)
+    assert all(a.status == "Present" for a in present_logs)
 
     # 3. Test Edge Case: Marking attendance for a student NOT enrolled in the course must fail
     unenrolled_student = next(s for s in all_students if not crud.is_student_enrolled_in_course(db, s.id, course.id))

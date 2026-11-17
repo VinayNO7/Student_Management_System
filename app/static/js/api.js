@@ -168,7 +168,11 @@ const API = {
         const query = new URLSearchParams();
         if (params.student_id) query.append('student_id', params.student_id);
         if (params.course_id) query.append('course_id', params.course_id);
-        if (params.date) query.append('date', params.date);
+        if (params.date) {
+            query.append('date', params.date);
+            query.append('date_val', params.date);
+        }
+        if (params.status) query.append('status', params.status);
         return this.request(`/api/attendance?${query.toString()}`);
     },
 
